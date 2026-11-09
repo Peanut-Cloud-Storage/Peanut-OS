@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peanut OS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E🥜%3C/text%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;touch-action:manipulation}
+body{font:14px/1.4 ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",sans-serif;--gl:18,18,32;--fg:#f3f3fb;--ln:rgba(255,255,255,.14);--accent:#7c5cff;--g:.55;color:var(--fg)}
+body[data-theme=light]{--gl:255,255,255;--fg:#16161f;--ln:rgba(0,0,0,.12)}
+#desk{position:fixed;inset:0;background-size:cover;background-position:center}
+.glass{background:rgba(var(--gl),var(--g));-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);border:1px solid var(--ln)}
+#icons{position:absolute;top:16px;left:16px;display:grid;gap:6px}
+.ic{width:86px;padding:8px 4px;border:0;background:none;color:#fff;border-radius:12px;font:inherit;text-align:center;cursor:pointer;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+body[data-theme=light] .ic{color:#16161f;text-shadow:0 1px 6px rgba(255,255,255,.7)}
+.ic b{display:block;font-size:34px;font-weight:400;line-height:1.2}
+.ic:hover,.ic:focus-visible{background:rgba(255,255,255,.16);outline:0}
+#bar{position:fixed;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:6px;padding:6px;border-radius:20px;max-width:calc(100vw - 16px);z-index:99999;align-items:center}
+body[data-bar=top] #bar{bottom:auto;top:max(12px,env(safe-area-inset-top))}
+#bar button{border:0;background:none;color:inherit;font:inherit;cursor:pointer;border-radius:12px;padding:8px 12px;white-space:nowrap}
+#bar button:hover{background:rgba(128,128,128,.2)}
+#start{background:var(--accent)!important;color:#fff!important;font-size:16px}
+#tasks{display:flex;gap:4px;overflow:hidden;max-width:56vw}
+.tk{max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.tk.on{box-shadow:inset 0 -3px 0 var(--accent)}
+#clock{opacity:.8;padding:0 8px;font-variant-numeric:tabular-nums}
+#menu{position:absolute;bottom:calc(100% + 10px);left:0;border-radius:18px;padding:8px;min-width:210px;display:grid;gap:2px}
+body[data-bar=top] #menu{bottom:auto;top:calc(100% + 10px)}
+#menu button{display:flex;gap:10px;align-items:center;text-align:left;padding:10px 12px}
+.win{position:fixed;display:flex;flex-direction:column;border-radius:14px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.45);min-width:250px;min-height:160px}
+.win.on{box-shadow:0 18px 50px rgba(0,0,0,.5),0 0 0 1.5px var(--accent)}
+.win.max{inset:8px 8px 76px!important;width:auto!important;height:auto!important}
+body[data-bar=top] .win.max{inset:76px 8px 8px!important}
+.tb{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 14px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;border-bottom:1px solid var(--ln)}
+.ti{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb button{width:30px;height:30px;border-radius:9px;border:0;background:rgba(128,128,128,.2);color:inherit;cursor:pointer;font:inherit}
+.tb button:hover{background:var(--accent);color:#fff}
+.bd{flex:1;overflow:auto;position:relative;background:rgba(var(--gl),.4)}
+.pad{padding:16px}
+.bd iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.rs{position:absolute;right:0;bottom:0;width:24px;height:24px;cursor:nwse-resize;touch-action:none;z-index:2;background:linear-gradient(135deg,transparent 55%,var(--ln) 55% 62%,transparent 62% 72%,var(--ln) 72% 79%,transparent 79%)}
+.btn{border:1px solid var(--ln);background:rgba(128,128,128,.16);color:inherit;border-radius:10px;padding:7px 12px;font:inherit;cursor:pointer}
+.btn.p{background:var(--accent);border-color:transparent;color:#fff}
+.btn:focus-visible,#bar button:focus-visible,.tb button:focus-visible,.tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,textarea,select{font:inherit;color:inherit;background:rgba(128,128,128,.14);border:1px solid var(--ln);border-radius:10px;padding:8px 10px;width:100%}
+textarea{height:100%;min-height:200px;resize:none;border-radius:0;border:0;background:none;padding:16px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.row>:last-child{width:55%}
+.row input[type=color]{height:36px;padding:2px}
+.sw{display:flex;gap:8px;flex-wrap:wrap;width:55%}
+.sw button{width:38px;height:38px;border-radius:50%;border:2px solid var(--ln);cursor:pointer;padding:0}
+.sw button.sel{border-color:var(--fg)}
+.tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.form{display:grid;gap:8px;margin-bottom:16px;padding:12px;border:1px solid var(--ln);border-radius:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px}
+.tile{position:relative;border:1px solid var(--ln);background:rgba(128,128,128,.14);color:inherit;border-radius:14px;padding:14px 6px;font:inherit;cursor:pointer;text-align:center}
+.tile:hover{border-color:var(--accent)}
+.tile b{display:block;font-size:34px;font-weight:400}
+.tile i{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:#e5484d;color:#fff;font-style:normal;line-height:26px}
+.muted{opacity:.7}
+h3{margin:0 0 6px;font-size:15px}
+p{margin:0 0 12px}
+code{background:rgba(128,128,128,.22);padding:1px 6px;border-radius:6px}
+
+/* browser look */
+body[data-bar] #bar{left:0;right:0;transform:none;max-width:none;border-radius:0;border-width:0 0 1px;padding:6px 8px 0;top:0;bottom:auto;height:46px;align-items:flex-end;gap:4px}
+body[data-bar=bottom] #bar{top:auto;bottom:0;border-width:1px 0 0;padding:0 8px 6px;align-items:flex-start}
+#tasks{flex:0 1 auto;max-width:none;min-width:0;height:100%;align-items:flex-end}
+.tk{display:flex!important;align-items:center;gap:6px;flex:0 1 200px;min-width:70px;height:34px;padding:0 6px 0 12px!important;border-radius:10px 10px 0 0!important;box-shadow:none!important;text-align:left}
+.tk.on{background:rgba(var(--gl),.9)!important}
+.tk span{flex:1;overflow:hidden;text-overflow:ellipsis}
+.tk .x{flex:none;width:20px;height:20px;border-radius:50%;text-align:center;line-height:20px;font-size:11px;opacity:.7}
+.tk .x:hover{background:rgba(128,128,128,.35)}
+#start{width:34px;height:34px;padding:0!important;align-self:center;border-radius:50%!important;font-size:20px;background:rgba(128,128,128,.2)!important;color:inherit!important}
+#addr{margin-left:auto;align-self:center;padding:5px 14px;border-radius:99px;background:rgba(128,128,128,.2);min-width:190px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body[data-bar=top] .win.max{inset:46px 0 0 0!important;border-radius:0;box-shadow:none!important}
+body[data-bar=bottom] .win.max{inset:0 0 46px 0!important;border-radius:0;box-shadow:none!important}
+.win.max .ti{opacity:.65;font-weight:500}
+#hero{position:absolute;left:0;right:0;top:calc(50% - 190px);text-align:center;font-size:clamp(40px,9vw,84px);font-weight:300;letter-spacing:-.02em;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.4)}
+body[data-theme=light] #hero{color:#16161f;text-shadow:none}
+#icons{top:50%;left:50%;transform:translate(-50%,-30%);grid-template-columns:repeat(4,92px);gap:14px 18px}
+@media(max-width:700px){#addr{display:none}#icons{grid-template-columns:repeat(3,92px)}}
+
+/* peanut brand */
+body{--gl:32,19,11;--fg:#fbefdc;--ln:rgba(255,226,180,.17);--accent:#d98a2b}
+body[data-theme=light]{--gl:255,247,232;--fg:#2a160a;--ln:rgba(80,40,10,.18)}
+.btn.p{color:var(--on)}
+.tb button:hover{background:var(--accent);color:var(--on)}
+#brand{align-self:center;font-size:22px;padding:0 6px 0 2px}
+#addr{width:auto;flex:0 1 340px;border:0;font:inherit;font-size:13px;color:inherit;text-align:left}
+#addr:focus{outline:2px solid var(--accent);background:rgba(var(--gl),.9)}
+#hero{top:calc(50% - 215px);line-height:1.05}
+#wm{font-size:clamp(16px,2.4vw,22px);font-weight:700;letter-spacing:.02em;margin-bottom:10px;opacity:.9}
+.ic b{width:62px;height:62px;line-height:62px;margin:0 auto 6px;border-radius:19px;background:rgba(var(--gl),.6);border:1px solid var(--ln);font-size:30px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);text-shadow:none}
+.ic{color:var(--fg)}
+.tile:hover{background:rgba(217,138,43,.18)}
+</style>
+</head>
+<body>
+<div id="desk"></div>
+<div id="hero"><div id="wm">🥜 Peanut OS</div><div id="ht"></div></div>
+<div id="icons"></div>
+<div id="bar" class="glass">
+  <span id="brand" title="Peanut OS">🥜</span>
+  <div id="tasks"></div>
+  <button id="start" aria-label="New tab">+</button>
+  <input id="addr" value="peanutos://newtab" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Address bar">
+  <span id="clock"></span>
+  <div id="menu" class="glass" hidden></div>
+</div>
+
+<script>
+/* ============ ADD YOUR GAMES HERE ============
+   Each game needs a name and an icon (any emoji), plus ONE of:
+   url:  'games/my-game/index.html'   (a folder you upload to this repo)
+         or 'https://some-site.com/game' (only works if that site allows embedding)
+   html: '<h1>inline html</h1>'       (small games written inline)
+   You can also add games from inside the OS with Games > Add game. */
+const SNAKE = `<body style="margin:0;background:#0b0b14;display:grid;place-items:center;height:100vh;touch-action:none"><canvas id=c width=300 height=300 style="max-width:100%;max-height:100%"></canvas><script>
+const c=document.getElementById('c'),x=c.getContext('2d'),N=15,Z=20;let s,d,f,dead;
+function init(){s=[[7,7]];d=[1,0];f=[10,7];dead=0}
+function tick(){if(dead)return;const h=[s[0][0]+d[0],s[0][1]+d[1]];if(h[0]<0||h[1]<0||h[0]>=N||h[1]>=N||s.some(p=>p[0]==h[0]&&p[1]==h[1])){dead=1;return}s.unshift(h);if(h[0]==f[0]&&h[1]==f[1])f=[Math.random()*N|0,Math.random()*N|0];else s.pop()}
+function draw(){x.fillStyle='#141424';x.fillRect(0,0,300,300);x.fillStyle='#ff5c8a';x.fillRect(f[0]*Z+2,f[1]*Z+2,16,16);x.fillStyle='#7cf5c8';s.forEach(p=>x.fillRect(p[0]*Z+1,p[1]*Z+1,18,18));if(dead){x.fillStyle='#fff';x.font='20px system-ui';x.fillText('Tap or press space',58,150)}}
+init();setInterval(()=>{tick();draw()},120);
+onkeydown=e=>{const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[e.key];if(m&&(m[0]+d[0]||m[1]+d[1]))d=m;if(e.key==' '&&dead)init()};
+let sx,sy;onpointerdown=e=>{sx=e.clientX;sy=e.clientY;if(dead)init()};
+onpointerup=e=>{const a=e.clientX-sx,b=e.clientY-sy;if(Math.abs(a)+Math.abs(b)<20)return;const m=Math.abs(a)>Math.abs(b)?[Math.sign(a),0]:[0,Math.sign(b)];if(m[0]+d[0]||m[1]+d[1])d=m};
+<\/script></body>`;
+
+const GAMES = [
+  {name:'Snake', icon:'🐍', html:SNAKE},
+  // {name:'My game', icon:'games/my-game/icon.png', url:'games/my-game/index.html'},
+  // icon can be an emoji like '🎮' or a path to an image in this repo
+];
+
+/* ============ OS CODE ============ */
+const $ = s => document.querySelector(s);
+const h = (t, p = {}, ...k) => { const e = document.createElement(t); Object.assign(e, p); e.append(...k); return e };
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v } catch { return d } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
+};
+const WALLS = [
+  'radial-gradient(60% 50% at 18% 12%,#b8641f88 0,transparent 60%),radial-gradient(55% 55% at 90% 25%,#e0a85a55 0,transparent 60%),radial-gradient(70% 60% at 55% 100%,#7a3b1688 0,transparent 62%),#1c110a',
+  'linear-gradient(160deg,#2a160a,#8a4a1c 55%,#f0b45a)',
+  'radial-gradient(60% 60% at 80% 10%,#d9b27a66 0,transparent 60%),radial-gradient(60% 60% at 10% 90%,#9a6a3a55 0,transparent 60%),#2b2118',
+  'linear-gradient(135deg,#f4e1bf,#e6c48f 55%,#c99a5b)',
+  'linear-gradient(135deg,#1a1109,#33210f)'
+];
+const DEF = {accent:'#d98a2b', wall:0, img:'', theme:'dark', bar:'top', glass:55};
+const S = Object.assign({}, DEF, store.get('s', {}));
+
+function apply() {
+  const b = document.body;
+  b.style.setProperty('--accent', S.accent);
+  const n = parseInt(S.accent.slice(1), 16), L = .299 * (n >> 16) + .587 * (n >> 8 & 255) + .114 * (n & 255);
+  b.style.setProperty('--on', L > 150 ? '#2a160a' : '#fff');
+  b.style.setProperty('--g', S.glass / 100);
+  b.dataset.theme = S.theme;
+  b.dataset.bar = S.bar;
+  const d = $('#desk');
+  d.style.background = '';
+  d.style.backgroundImage = S.img ? `url("${S.img.replace(/"/g, '%22')}")` : (WALLS[S.wall] || WALLS[0]);
+}
+const save = () => { store.set('s', S); apply() };
+
+/* ---- windows ---- */
+let z = 10;
+const wins = {};
+function focus(w) {
+  Object.values(wins).forEach(o => { o.el.classList.remove('on'); o.tk.classList.remove('on') });
+  w.el.style.zIndex = ++z; w.el.classList.add('on'); w.tk.classList.add('on');
+  $('#addr').value = 'peanutos://' + w.t.toLowerCase().replace(/\s+/g, '-');
+}
+function openWin(id, title, icon, render, w = 520, hgt = 430) {
+  if (wins[id]) { wins[id].el.hidden = false; focus(wins[id]); return }
+  const W = Math.min(w, innerWidth - 16), H = Math.min(hgt, innerHeight - 110), n = Object.keys(wins).length % 6;
+  const el = h('div', {className: 'win glass'});
+  el.style.cssText = `width:${W}px;height:${H}px;left:${Math.max(8, (innerWidth - W) / 2 + n * 26 - 60)}px;top:${Math.max(8, (innerHeight - H) / 2 + n * 26 - 70)}px`;
+  const bm = h('button', {textContent: '–', title: 'Minimize'}), bx = h('button', {textContent: '▢', title: 'Maximize'}), bc = h('button', {textContent: '✕', title: 'Close'});
+  const tb = h('div', {className: 'tb'}, h('span', {className: 'ti', textContent: icon + ' ' + title}), bm, bx, bc);
+  const bd = h('div', {className: 'bd'}), rs = h('div', {className: 'rs'});
+  el.append(tb, bd, rs);
+  document.body.append(el);
+  el.classList.add('max');
+  const tk = h('button', {className: 'tk'}, h('span', {textContent: icon + ' ' + title}), h('span', {className: 'x', textContent: '✕', onclick: e => { e.stopPropagation(); bc.onclick() }}));
+  $('#tasks').append(tk);
+  const win = {el, tk, t: title}; wins[id] = win;
+  tk.onclick = () => { el.hidden = false; focus(win) };
+  bm.onclick = () => { el.hidden = true; tk.classList.remove('on') };
+  const toggleMax = () => el.classList.toggle('max');
+  bx.onclick = toggleMax; tb.ondblclick = toggleMax;
+  bc.onclick = () => { el.remove(); tk.remove(); delete wins[id]; const o = Object.values(wins)[0]; if (o) { o.el.hidden = false; focus(o) } else $('#addr').value = 'peanutos://newtab' };
+  el.addEventListener('pointerdown', () => focus(win), true);
+  tb.onpointerdown = e => {
+    if (e.target.closest('button') || el.classList.contains('max')) return;
+    const r = el.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+    tb.setPointerCapture(e.pointerId);
+    tb.onpointermove = m => {
+      el.style.left = Math.min(Math.max(80 - r.width, m.clientX - dx), innerWidth - 80) + 'px';
+      el.style.top = Math.min(Math.max(0, m.clientY - dy), innerHeight - 44) + 'px';
+    };
+    tb.onpointerup = () => { tb.onpointermove = null };
+  };
+  rs.onpointerdown = e => {
+    const r = el.getBoundingClientRect(); rs.setPointerCapture(e.pointerId);
+    rs.onpointermove = m => {
+      el.style.width = Math.max(250, m.clientX - r.left) + 'px';
+      el.style.height = Math.max(160, m.clientY - r.top) + 'px';
+    };
+    rs.onpointerup = () => { rs.onpointermove = null };
+  };
+  render(bd);
+  focus(win);
+}
+
+/* ---- apps ---- */
+function openGame(g) {
+  openWin('game:' + g.name, g.name, (g.icon && !/^data:|\.(png|jpe?g|gif|webp|svg)$/i.test(g.icon)) ? g.icon : '🎮', b => {
+    const f = h('iframe');
+    f.allow = 'fullscreen; gamepad; autoplay';
+    f.setAttribute('allowfullscreen', '');
+    f.sandbox = 'allow-scripts allow-same-origin allow-pointer-lock allow-forms allow-popups allow-modals';
+    if (g.html) f.srcdoc = g.html; else f.src = g.url;
+    b.append(f);
+  }, 780, 560);
+}
+
+let userGames = [];
+const idb = {
+  db: null,
+  open() { return this.db || (this.db = new Promise((res, rej) => { const r = indexedDB.open('peanut', 1); r.onupgradeneeded = () => r.result.createObjectStore('games', {keyPath: 'id'}); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error) })) },
+  async run(mode, fn) { const d = await this.open(); return new Promise((res, rej) => { const q = fn(d.transaction('games', mode).objectStore('games')); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error) }) },
+  all() { return this.run('readonly', s => s.getAll()) },
+  put(v) { return this.run('readwrite', s => s.put(v)) },
+  del(id) { return this.run('readwrite', s => s.delete(id)) }
+};
+idb.all().then(a => { userGames = a }).catch(() => {});
+const thumb = f => new Promise(res => {
+  const im = new Image();
+  im.onload = () => {
+    const c = h('canvas'); c.width = c.height = 128;
+    const k = Math.max(128 / im.width, 128 / im.height), w = im.width * k, ht = im.height * k;
+    c.getContext('2d').drawImage(im, (128 - w) / 2, (128 - ht) / 2, w, ht);
+    res(c.toDataURL('image/png'));
+  };
+  im.onerror = () => res('');
+  im.src = URL.createObjectURL(f);
+});
+
+function gamesApp(b) {
+  b.classList.add('pad');
+  let manage = false, adding = false;
+  const draw = async () => {
+    try { userGames = await idb.all() } catch { userGames = [] }
+    b.innerHTML = '';
+    b.append(h('div', {className: 'tools'},
+      h('button', {className: 'btn p', textContent: '+ Add game', onclick: () => { adding = !adding; draw() }}),
+      h('button', {className: 'btn', textContent: manage ? 'Done' : 'Remove games', onclick: () => { manage = !manage; draw() }})));
+    if (adding) {
+      const n = h('input', {placeholder: 'Game name (optional)'});
+      const gf = h('input', {type: 'file', accept: '.html,.htm,text/html'});
+      const inf = h('input', {type: 'file', accept: 'image/*'});
+      const note = h('p', {className: 'muted', textContent: 'The game must be a single .html file. Games made of many files go in your GitHub repo instead.'});
+      const save = h('button', {className: 'btn p', textContent: 'Save game', onclick: async () => {
+        const f = gf.files[0];
+        if (!f) { note.textContent = 'Choose a game file first.'; return }
+        try {
+          await idb.put({id: Date.now(), name: n.value.trim() || f.name.replace(/\.[^.]+$/, ''), html: await f.text(), icon: inf.files[0] ? await thumb(inf.files[0]) : ''});
+          adding = false; draw();
+        } catch { note.textContent = 'Could not save. Your browser may be blocking storage.' }
+      }});
+      b.append(h('div', {className: 'form'}, n, h('span', {className: 'muted', textContent: 'Game file (.html)'}), gf,
+        h('span', {className: 'muted', textContent: 'Icon image (optional)'}), inf, note, save));
+    }
+    const all = [...GAMES.map(g => ({...g, own: 0})), ...userGames.map(g => ({...g, own: 1}))];
+    const grid = h('div', {className: 'grid'});
+    all.forEach(g => {
+      const img = g.icon && /^data:|\.(png|jpe?g|gif|webp|svg)$/i.test(g.icon);
+      const t = h('button', {className: 'tile', onclick: () => openGame(g)},
+        img ? h('img', {src: g.icon, alt: '', style: 'width:58px;height:58px;border-radius:14px;object-fit:cover;display:block;margin:0 auto 6px'}) : h('b', {textContent: g.icon || '🎮'}), g.name);
+      if (manage && g.own) t.append(h('i', {textContent: '✕', onclick: async e => { e.stopPropagation(); await idb.del(g.id); draw() }}));
+      grid.append(t);
+    });
+    b.append(grid);
+  };
+  draw();
+}
+
+function settingsApp(b) {
+  b.classList.add('pad');
+  const row = (l, c) => h('label', {className: 'row'}, h('span', {textContent: l}), c);
+  const draw = () => {
+    b.innerHTML = '';
+    const acc = h('input', {type: 'color', value: S.accent, oninput: e => { S.accent = e.target.value; save() }});
+    const sw = h('div', {className: 'sw'});
+    WALLS.forEach((w, i) => sw.append(h('button', {
+      className: !S.img && S.wall === i ? 'sel' : '', title: 'Wallpaper ' + (i + 1),
+      style: 'background:' + w, onclick: () => { S.wall = i; S.img = ''; save(); draw() }
+    })));
+    const img = h('input', {placeholder: 'Image link (optional)', value: S.img.startsWith('data:') ? '' : S.img, onchange: e => { S.img = e.target.value.trim(); save(); draw() }});
+    const th = h('select', {onchange: e => { S.theme = e.target.value; save() }}, h('option', {value: 'dark', textContent: 'Dark'}), h('option', {value: 'light', textContent: 'Light'}));
+    th.value = S.theme;
+    const bar = h('select', {onchange: e => { S.bar = e.target.value; save() }}, h('option', {value: 'bottom', textContent: 'Bottom'}), h('option', {value: 'top', textContent: 'Top'}));
+    bar.value = S.bar;
+    const gl = h('input', {type: 'range', min: 20, max: 95, value: S.glass, oninput: e => { S.glass = +e.target.value; save() }});
+    const up = h('input', {type: 'file', accept: 'image/*', onchange: e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        const im = new Image();
+        im.onload = () => {
+          const k = Math.min(1, 1920 / Math.max(im.width, im.height)), c = h('canvas');
+          c.width = im.width * k; c.height = im.height * k;
+          c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+          S.img = c.toDataURL('image/jpeg', .82); save(); draw();
+        };
+        im.src = r.result;
+      };
+      r.readAsDataURL(f);
+    }});
+    b.append(row('Accent color', acc), row('Wallpaper', sw), row('Upload background', up), row('Wallpaper image link', img), row('Theme', th), row('Tab bar', bar), row('Window opacity', gl),
+      h('button', {className: 'btn', textContent: 'Reset to defaults', onclick: () => { Object.assign(S, DEF); save(); draw() }}));
+  };
+  draw();
+}
+
+function notesApp(b) {
+  const t = h('textarea', {placeholder: 'Write something. It saves automatically on this device.', value: store.get('n', ''),
+    oninput: e => store.set('n', e.target.value)});
+  b.append(t);
+}
+
+function helpApp(b) {
+  b.classList.add('pad');
+  b.innerHTML = `<h3>Add games from inside the OS</h3><p>Open <b>Games</b>, tap <b>Add game</b>, then choose a game file (.html) and an icon image. They are saved in your browser on this device only.</p>
+  <h3>Add games to your repo</h3><p>Upload a game's folder to a <code>games</code> folder in your GitHub repo, then add it with the path <code>games/my-game/index.html</code>. To list it for every device, add a line to the <code>GAMES</code> list at the top of <code>index.html</code>.</p>
+  <h3>Tips</h3><p>Drag a window by its title bar and resize from the bottom-right corner. Double-click a title bar to maximize. Customize colors and your background in <b>Settings</b>. Type <code>peanutos://games</code>, <code>peanutos://paint</code>, or a game's name in the address bar to jump there, or type a website to open it in the Browser.</p>`;
+}
+
+function calcApp(b) {
+  b.classList.add('pad');
+  let e = '';
+  const out = h('input', {readOnly: true, value: '0', style: 'font-size:26px;text-align:right;margin-bottom:10px'});
+  const g = h('div', {style: 'display:grid;grid-template-columns:repeat(4,1fr);gap:8px'});
+  ['C','⌫','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0','.','±','='].forEach(k => g.append(h('button', {
+    className: 'btn' + (k == '=' ? ' p' : ''), textContent: k, style: 'padding:14px;font-size:18px',
+    onclick: () => {
+      if (e == 'Error') e = '';
+      if (k == 'C') e = '';
+      else if (k == '⌫') e = e.slice(0, -1);
+      else if (k == '=') { try { if (/^[0-9+\-*/.% ()]+$/.test(e)) e = String(+Function('"use strict";return (' + e + ')')().toPrecision(12)) } catch { e = 'Error' } }
+      else if (k == '±') e = e.startsWith('-') ? e.slice(1) : '-' + e;
+      else e += {'÷': '/', '×': '*', '−': '-'}[k] || k;
+      out.value = e || '0';
+    }
+  })));
+  b.append(out, g);
+}
+
+function paintApp(b) {
+  let col = '#ff5c8a', sz = 6, erase = false, last = null;
+  const cv = h('canvas', {style: 'position:absolute;inset:0;width:100%;height:100%;touch-action:none;background:#fff;cursor:crosshair'});
+  const wrap = h('div', {style: 'flex:1;position:relative;min-height:0'}, cv);
+  const clear = () => { const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height) };
+  b.style.cssText = 'display:flex;flex-direction:column';
+  b.append(h('div', {style: 'display:flex;gap:8px;padding:8px;align-items:center;flex-wrap:wrap'},
+    h('input', {type: 'color', value: col, style: 'width:48px;height:34px;padding:2px', oninput: e => { col = e.target.value; erase = false }}),
+    h('input', {type: 'range', min: 1, max: 40, value: sz, style: 'width:110px', oninput: e => { sz = +e.target.value }}),
+    h('button', {className: 'btn', textContent: 'Eraser', onclick: () => { erase = !erase }}),
+    h('button', {className: 'btn', textContent: 'Clear', onclick: clear}),
+    h('button', {className: 'btn', textContent: 'Save PNG', onclick: () => h('a', {href: cv.toDataURL(), download: 'drawing.png'}).click()})), wrap);
+  new ResizeObserver(() => {
+    const r = cv.getBoundingClientRect(); if (!r.width) return;
+    const x = cv.getContext('2d'), old = cv.width ? x.getImageData(0, 0, cv.width, cv.height) : null;
+    cv.width = r.width; cv.height = r.height; clear(); if (old) x.putImageData(old, 0, 0);
+  }).observe(cv);
+  const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top] };
+  const seg = (a, c) => {
+    const x = cv.getContext('2d'); x.strokeStyle = erase ? '#fff' : col; x.lineWidth = sz; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(c[0], c[1]); x.stroke();
+  };
+  cv.onpointerdown = e => { cv.setPointerCapture(e.pointerId); last = pos(e); seg(last, last) };
+  cv.onpointermove = e => { if (!last) return; const p = pos(e); seg(last, p); last = p };
+  cv.onpointerup = () => { last = null };
+}
+
+function browserApp(b) {
+  const u = h('input', {placeholder: 'Enter a link, e.g. https://example.com'});
+  const f = h('iframe', {style: 'inset:44px 0 0 0;height:calc(100% - 44px);background:#fff'});
+  const go = () => { let v = u.value.trim(); if (!v) return; if (!/^https?:\/\//.test(v)) v = 'https://' + v; u.value = v; f.src = v };
+  u.onkeydown = e => { if (e.key == 'Enter') go() };
+  b.append(h('div', {style: 'display:flex;gap:6px;padding:6px;height:44px'}, u, h('button', {className: 'btn p', textContent: 'Go', onclick: go})), f);
+  if (window.pend) { u.value = window.pend; window.pend = ''; go() }
+}
+
+const APPS = [
+  {id: 'games', name: 'Games', icon: '🎮', run: gamesApp, w: 560, h: 460},
+  {id: 'notes', name: 'Notes', icon: '📝', run: notesApp, w: 420, h: 380},
+  {id: 'settings', name: 'Settings', icon: '⚙️', run: settingsApp, w: 500, h: 460},
+  {id: 'paint', name: 'Paint', icon: '🎨', run: paintApp, w: 560, h: 440},
+  {id: 'calc', name: 'Calculator', icon: '🧮', run: calcApp, w: 320, h: 460},
+  {id: 'browser', name: 'Browser', icon: '🌐', run: browserApp, w: 700, h: 500},
+  {id: 'help', name: 'Help', icon: '💡', run: helpApp, w: 460, h: 400}
+];
+const launch = a => { $('#menu').hidden = true; openWin(a.id, a.name, a.icon, a.run, a.w, a.h) };
+APPS.forEach(a => {
+  $('#icons').append(h('button', {className: 'ic', onclick: () => launch(a)}, h('b', {textContent: a.icon}), a.name));
+  $('#menu').append(h('button', {onclick: () => launch(a)}, a.icon + '  ' + a.name));
+});
+const slug = t => t.toLowerCase().trim().replace(/\s+/g, '-');
+const addr = $('#addr');
+const restore = () => {
+  const a = Object.values(wins).find(w => !w.el.hidden && w.el.classList.contains('on'));
+  addr.value = a ? 'peanutos://' + slug(a.t) : 'peanutos://newtab';
+};
+function openUrl(v) {
+  if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
+  const w = wins.browser;
+  if (w) { w.el.querySelector('iframe').src = v; w.el.querySelector('input').value = v; w.el.hidden = false; focus(w) }
+  else { window.pend = v; launch(APPS.find(a => a.id == 'browser')) }
+}
+function go(raw) {
+  raw = raw.trim();
+  let q = slug(raw.replace(/^peanutos:\/\//i, '').replace(/^games\//i, '')).replace(/\/+$/, '');
+  if (!q || q == 'newtab') { Object.values(wins).forEach(w => { w.el.hidden = true; w.tk.classList.remove('on') }); addr.value = 'peanutos://newtab'; return }
+  if (q == 'calculator') q = 'calc';
+  const app = APPS.find(a => a.id == q); if (app) return launch(app);
+  const g = [...GAMES, ...userGames].find(g => slug(g.name) == q); if (g) return openGame(g);
+  if (/^https?:\/\//i.test(raw) || /^[\w-]+(\.[\w-]+)+(\/.*)?$/.test(raw)) return openUrl(raw);
+  addr.value = 'Page not found'; setTimeout(restore, 1300);
+}
+addr.onkeydown = e => { if (e.key == 'Enter') { go(addr.value); addr.blur() } };
+addr.onfocus = () => addr.select();
+addr.onblur = () => setTimeout(restore, 150);
+$('#start').onclick = e => { e.stopPropagation(); $('#menu').hidden = !$('#menu').hidden };
+document.addEventListener('pointerdown', e => { if (!e.target.closest('#bar')) $('#menu').hidden = true });
+
+const tick = () => { $('#clock').textContent = $('#ht').textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) };
+tick(); setInterval(tick, 10000);
+apply();
+launch(APPS[0]);
+</script>
+</body>
+</html>
